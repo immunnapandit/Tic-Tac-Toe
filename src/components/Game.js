@@ -3,73 +3,81 @@ import Board from './Board';
 import './Game.css';
 
 const Game = () => {
+  const initialScore = JSON.parse(localStorage.getItem('ticTacToeScore')) || { blue: 0, red: 0 };
   const [squares, setSquares] = useState(Array(9).fill(null));
-  const [isBlueNext, setIsBlueNext] = useState(true);
-  const [blueScore, setBlueScore] = useState(() => parseInt(localStorage.getItem('blueScore')) || 0);
-  const [redScore, setRedScore] = useState(() => parseInt(localStorage.getItem('redScore')) || 0);
-
-  const winner = calculateWinner(squares);
+  const [xIsNext, setXIsNext] = useState(true);
+  const [score, setScore] = useState(initialScore);
 
   useEffect(() => {
-    if (winner === 'Blue') {
-      setBlueScore(blueScore + 1);
-    } else if (winner === 'Red') {
-      setRedScore(redScore + 1);
+    const storedScore = JSON.parse(localStorage.getItem('ticTacToeScore'));
+    if (storedScore) {
+      setScore(storedScore);
     }
-  }, [winner]);
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('blueScore', blueScore);
-    localStorage.setItem('redScore', redScore);
-  }, [blueScore, redScore]);
+    localStorage.setItem('ticTacToeScore', JSON.stringify(score));
+  }, [score]);
 
   const handleClick = (i) => {
-    if (squares[i] || winner) {
+    const squaresCopy = squares.slice();
+    if (calculateWinner(squaresCopy) || squaresCopy[i]) {
       return;
     }
-    const newSquares = squares.slice();
-    newSquares[i] = isBlueNext ? 'Blue' : 'Red';
-    setSquares(newSquares);
-    setIsBlueNext(!isBlueNext);
+    squaresCopy[i] = xIsNext ? 'blue' : 'red';
+    setSquares(squaresCopy);
+    setXIsNext(!xIsNext);
   };
 
-  const handleReset = () => {
-    setSquares(Array(9).fill(null));
-    setIsBlueNext(true);
+  const calculateWinner = (squares) => {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+    for (let i = 0; i < lines.length; i++) {
+      const [a, b, c] = lines[i];
+      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+        return squares[a];
+      }
+    }
+    return null;
   };
+
+  const winner = calculateWinner(squares);
+  let status;
+  if (winner) {
+    status = `Winner: ${winner}`;
+    setTimeout(() => {
+      setSquares(Array(9).fill(null));
+      setScore((prevScore) => ({
+        ...prevScore,
+        [winner]: prevScore[winner] + 1,
+      }));
+    }, 1000);
+  } else {
+    status = `Next player: ${xIsNext ? 'blue' : 'red'}`;
+  }
 
   return (
     <div className="game">
       <div className="score-board">
-        <div className="score blue">Blue: {blueScore}</div>
-        <div className="score red">Red: {redScore}</div>
+        <div className="score blue-score">Blue: {score.blue}</div>
+        <div className="score red-score">Red: {score.red}</div>
       </div>
-      <Board squares={squares} onClick={handleClick} />
-      <div className="status">{winner ? `Winner: ${winner}` : `Next player: ${isBlueNext ? 'Blue' : 'Red'}`}</div>
-      <button className="reset-button" onClick={handleReset}>Reset Game</button>
+      <div className="game-board">
+        <Board squares={squares} onClick={handleClick} />
+      </div>
+      <div className="game-info">
+        <div className="status">{status}</div>
+      </div>
     </div>
   );
-};
-
-const calculateWinner = (squares) => {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
-
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
-    }
-  }
-  return null;
 };
 
 export default Game;

@@ -1,14 +1,13 @@
 import React from 'react';
 import Square from './Square';
-import './Board.css';
 
 const Board = ({ squares, onClick }) => {
-  const renderSquare = (i) => (
-    <Square value={squares[i]} onClick={() => onClick(i)} />
-  );
+  const renderSquare = (i) => {
+    return <Square value={squares[i]} onClick={() => onClick(i)} />;
+  };
 
   return (
-    <div className="board">
+    <div>
       <div className="board-row">
         {renderSquare(0)}
         {renderSquare(1)}
